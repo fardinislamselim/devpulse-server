@@ -46,3 +46,12 @@ export const initDb = async () => {
     process.exit(1);
   }
 };
+
+
+export const queryOne = async  <T extends object>(
+  sql: string,
+  params: unknown[] = [],
+): Promise<T | null> => {
+  const result = await pool.query<T>(sql, params);
+  return result.rows[0] ?? null;
+}
