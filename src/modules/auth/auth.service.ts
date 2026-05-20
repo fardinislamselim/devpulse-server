@@ -1,8 +1,10 @@
 import bcrypt from "bcrypt";
 import { queryOne } from "../../db";
-import type { ISignupBody, IUser, IPublicUser } from "../../utils/type";
+import type { ISignupBody, IUser, IPublicUser, ILoginBody } from "../../utils/type";
+import { signToken } from "../../utils/jwt";
 
 const SALT_ROUNDS = 10;
+
 
 export const createUser = async (
   payload: ISignupBody,
@@ -35,4 +37,38 @@ export const createUser = async (
   }
 
   return newUser;
+};
+
+export const loginUser = async (payload: ILoginBody) => {
+  const { email, password } = payload;
+
+  const user = await queryOne<IUser>(
+    `SELECT id, name, email, password, role, created_at, updated_at
+     FROM users
+     WHERE email = $1`,
+    [email.toLowerCase().trim()],
+  );
+
+  if (!user) {
+    throw new Error("Invalid email or password.");
+  }
+
+  const passwordMatch = await bcrypt.compare(password, user.password);
+
+  if (!passwordMatch) {
+    throw new Error("Invalid email or password.");
+  }
+
+  const token = signToken({
+    id: user.id,
+    name: user.name,
+    role: user.role,
+  });
+
+  const { password: _pw, ...publicUser } = user;
+
+  return {
+    token,
+    user: publicUser,
+  };
 };

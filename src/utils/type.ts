@@ -25,3 +25,16 @@ export interface IPublicUser {
   created_at: Date;
   updated_at: Date;
 }
+
+export interface ILoginBody {
+  email: string;
+  password: string;
+}
+
+export interface IJwtPayload {
+  id: number;
+  name: string;
+  role: IUserRole;
+  iat?: number;
+  exp?: number;
+}
