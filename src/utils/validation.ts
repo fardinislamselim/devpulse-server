@@ -1,4 +1,4 @@
-import type { ICreateIssueBody, ILoginBody, ISignupBody } from "./type";
+import type { ICreateIssueBody, ILoginBody, ISignupBody, IUpdateIssueBody } from "./type";
 
 export interface ValidationResult {
   valid: boolean;
@@ -29,9 +29,9 @@ export const validateLogin = (body: Partial<ILoginBody>): ValidationResult => {
   return { valid: errors.length === 0, errors };
 };
 
-export const validateCreateIssue=(
+export const validateCreateIssue = (
   body: Partial<ICreateIssueBody>,
-): ValidationResult=> {
+): ValidationResult => {
   const errors: string[] = [];
   if (!body.title?.trim()) errors.push("title is required");
   if (body.title && body.title.length > 150)
@@ -43,6 +43,35 @@ export const validateCreateIssue=(
   if (!body.type) errors.push("type is required");
   if (body.type && !["bug", "feature_request"].includes(body.type)) {
     errors.push("type must be bug or feature_request");
+  }
+  return { valid: errors.length === 0, errors };
+};
+
+export function validateUpdateIssue(
+  body: Partial<IUpdateIssueBody>,
+): ValidationResult {
+  const errors: string[] = [];
+  if (body.title !== undefined) {
+    if (!body.title.trim()) errors.push("title cannot be empty");
+    if (body.title.length > 150)
+      errors.push("title must be 150 characters or fewer");
+  }
+  if (body.description !== undefined) {
+    if (body.description.trim().length < 20) {
+      errors.push("description must be at least 20 characters");
+    }
+  }
+  if (
+    body.type !== undefined &&
+    !["bug", "feature_request"].includes(body.type)
+  ) {
+    errors.push("type must be bug or feature_request");
+  }
+  if (
+    body.status !== undefined &&
+    !["open", "in_progress", "resolved"].includes(body.status)
+  ) {
+    errors.push("status must be open, in_progress, or resolved");
   }
   return { valid: errors.length === 0, errors };
 }

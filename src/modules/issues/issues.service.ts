@@ -1,3 +1,4 @@
+import { StatusCodes } from "http-status-codes";
 import { queryOne, queryRows } from "../../db";
 import type {
   ICreateIssueBody,
@@ -5,6 +6,8 @@ import type {
   IIssueQueryParams,
   IIssueWithReporter,
   IReporterInfo,
+  IUpdateIssueBody,
+  IUserPayload,
 } from "../../utils/type";
 
 export const createIssueService = async (
@@ -150,4 +153,110 @@ export const getIssueByIdService = async (
       role: "contributor",
     },
   };
+};
+
+export const updateIssueService = async (
+  issueId: number,
+  body: Partial<IUpdateIssueBody>,
+  user: IUserPayload,
+): Promise<IIssue> => {
+  // Find issue
+  const issue = await queryOne<IIssue>(
+    `SELECT *
+     FROM issues
+     WHERE id = $1`,
+    [issueId],
+  );
+
+  // Not found
+  if (!issue) {
+    throw {
+      statusCode: StatusCodes.NOT_FOUND,
+      message: "Issue not found.",
+    };
+  }
+
+  // Permission checks
+  if (user.role === "contributor") {
+    // Only own issue
+    if (issue.reporter_id !== user.id) {
+      throw {
+        statusCode: StatusCodes.FORBIDDEN,
+        message: "You can only edit your own issues.",
+      };
+    }
+
+    // Only open issue
+    if (issue.status !== "open") {
+      throw {
+        statusCode: StatusCodes.CONFLICT,
+        message: "Contributors can only edit issues that are still open.",
+      };
+    }
+  }
+
+  // Dynamic SET clause
+  const setClauses: string[] = [];
+
+  const params: unknown[] = [];
+
+  // Title
+  if (body.title !== undefined) {
+    params.push(body.title.trim());
+
+    setClauses.push(`title = $${params.length}`);
+  }
+
+  // Description
+  if (body.description !== undefined) {
+    params.push(body.description.trim());
+
+    setClauses.push(`description = $${params.length}`);
+  }
+
+  // Type
+  if (body.type !== undefined) {
+    params.push(body.type);
+
+    setClauses.push(`type = $${params.length}`);
+  }
+
+  // Only maintainer can update status
+  if (body.status !== undefined && user.role === "maintainer") {
+    params.push(body.status);
+
+    setClauses.push(`status = $${params.length}`);
+  }
+
+  // No valid fields
+  if (setClauses.length === 0) {
+    throw {
+      statusCode: StatusCodes.BAD_REQUEST,
+      message: "No valid fields provided for update.",
+    };
+  }
+
+  // Always update timestamp
+  setClauses.push(`updated_at = NOW()`);
+
+  // WHERE id
+  params.push(issueId);
+
+  // Update query
+  const updated = await queryOne<IIssue>(
+    `UPDATE issues
+     SET ${setClauses.join(", ")}
+     WHERE id = $${params.length}
+     RETURNING *`,
+    params,
+  );
+
+  if (!updated) {
+    throw {
+      statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
+      message: "Failed to update issue.",
+    };
+  }
+
+  return updated;
 };

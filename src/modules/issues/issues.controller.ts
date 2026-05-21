@@ -5,9 +5,19 @@ import {
   createIssueService,
   getAllIssuesService,
   getIssueByIdService,
+  updateIssueService,
 } from "./issues.service";
-import type { ICreateIssueBody, IIssueQueryParams } from "../../utils/type";
-import { validateCreateIssue } from "../../utils/validation";
+import type {
+  ICreateIssueBody,
+  IIssue,
+  IIssueQueryParams,
+  IUpdateIssueBody,
+} from "../../utils/type";
+import {
+  validateCreateIssue,
+  validateUpdateIssue,
+} from "../../utils/validation";
+import { queryOne } from "../../db";
 
 export const createIssue = async (
   req: Request,
@@ -82,6 +92,46 @@ export const getIssueById = async (
     }
 
     sendSuccess(res, StatusCodes.OK, "Issue fetched successfully", issue);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const updateIssue = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    // Parse issue ID
+    const issueId = Number(req.params.id);
+
+    if (Number.isNaN(issueId)) {
+      sendError(res, StatusCodes.BAD_REQUEST, "Invalid issue ID.");
+
+      return;
+    }
+
+    // Current logged in user
+    const user = req.user!;
+
+    // Request body
+    const body = req.body as Partial<IUpdateIssueBody>;
+
+    // Validation
+    const { valid, errors } = validateUpdateIssue(body);
+
+    if (!valid) {
+      sendError(res, StatusCodes.BAD_REQUEST, "Validation failed", errors);
+
+      return;
+    }
+
+    // Service call
+    const updated = await updateIssueService(issueId, body, user);
+
+    // Success response
+    sendSuccess(res, StatusCodes.OK, "Issue updated successfully", updated);
   } catch (err) {
     next(err);
   }

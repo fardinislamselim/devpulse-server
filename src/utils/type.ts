@@ -67,7 +67,6 @@ export interface IIssueQueryParams {
   status?: IIssueStatus;
 }
 
-
 export interface IReporterInfo {
   id: number;
   name: string;
@@ -76,4 +75,17 @@ export interface IReporterInfo {
 
 export interface IIssueWithReporter extends Omit<IIssue, "reporter_id"> {
   reporter: IReporterInfo;
+}
+
+export interface IUpdateIssueBody {
+  title?: string;
+  description?: string;
+  type?: IIssueType;
+  status?: IIssueStatus;
+}
+
+export interface IUserPayload {
+  id: number;
+  name: string;
+  role: "contributor" | "maintainer";
 }
