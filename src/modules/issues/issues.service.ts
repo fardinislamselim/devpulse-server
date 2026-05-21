@@ -1,5 +1,11 @@
 import { queryOne, queryRows } from "../../db";
-import type { ICreateIssueBody, IIssue, IIssueQueryParams, IIssueWithReporter, IReporterInfo } from "../../utils/type";
+import type {
+  ICreateIssueBody,
+  IIssue,
+  IIssueQueryParams,
+  IIssueWithReporter,
+  IReporterInfo,
+} from "../../utils/type";
 
 export const createIssueService = async (
   payload: ICreateIssueBody,
@@ -101,4 +107,47 @@ export const getAllIssuesService = async (
 
   // Attach reporter info
   return await attachReporters(issues);
+};
+
+const getReporter = async (
+  reporterId: number,
+): Promise<IReporterInfo | null> => {
+  return await queryOne<IReporterInfo>(
+    `SELECT id, name, role
+     FROM users
+     WHERE id = $1`,
+    [reporterId],
+  );
+};
+
+export const getIssueByIdService = async (
+  id: string,
+): Promise<IIssueWithReporter | null> => {
+  // Fetch issue
+  const issue = await queryOne<IIssue>(
+    `SELECT *
+     FROM issues
+     WHERE id = $1`,
+    [id],
+  );
+
+  if (!issue) {
+    return null;
+  }
+
+  // Fetch reporter
+  const reporter = await getReporter(issue.reporter_id);
+
+  // Remove reporter_id
+  const { reporter_id, ...rest } = issue;
+
+  // Final response shape
+  return {
+    ...rest,
+    reporter: reporter ?? {
+      id: reporter_id,
+      name: "Unknown",
+      role: "contributor",
+    },
+  };
 };

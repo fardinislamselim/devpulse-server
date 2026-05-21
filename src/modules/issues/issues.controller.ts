@@ -1,7 +1,11 @@
 import type { NextFunction, Request, Response } from "express";
 import { sendError, sendSuccess } from "../../utils/sendResponse";
 import { StatusCodes } from "http-status-codes";
-import { createIssueService, getAllIssuesService } from "./issues.service";
+import {
+  createIssueService,
+  getAllIssuesService,
+  getIssueByIdService,
+} from "./issues.service";
 import type { ICreateIssueBody, IIssueQueryParams } from "../../utils/type";
 import { validateCreateIssue } from "../../utils/validation";
 
@@ -49,6 +53,35 @@ export const getAllIssues = async (
     const data = await getAllIssuesService(query);
 
     sendSuccess(res, StatusCodes.OK, "Issues fetched successfully", data);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getIssueById = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    // Type guard
+    if (!id || Array.isArray(id)) {
+      sendError(res, StatusCodes.BAD_REQUEST, "Invalid issue ID");
+
+      return;
+    }
+
+    const issue = await getIssueByIdService(id);
+
+    if (!issue) {
+      sendError(res, StatusCodes.NOT_FOUND, "Issue not found.");
+
+      return;
+    }
+
+    sendSuccess(res, StatusCodes.OK, "Issue fetched successfully", issue);
   } catch (err) {
     next(err);
   }
