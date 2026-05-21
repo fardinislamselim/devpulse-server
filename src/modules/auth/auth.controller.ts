@@ -52,7 +52,7 @@ export const login = async (
     const result = await loginUser(body as ILoginBody);
 
     // Save token in cookie
-    res.cookie("token", result.token, {
+    res.cookie("Authorization", result.token, {
       httpOnly: true,
       secure: config.node_env === "production",
       sameSite: "strict",
@@ -61,6 +61,7 @@ export const login = async (
 
     // Success response
     sendSuccess(res, StatusCodes.OK, "Login successful", {
+      token: result.token,
       user: result.user,
     });
   } catch (err) {

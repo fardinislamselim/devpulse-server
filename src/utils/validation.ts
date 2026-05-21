@@ -1,11 +1,13 @@
-import type { ILoginBody, ISignupBody } from "./type";
+import type { ICreateIssueBody, ILoginBody, ISignupBody } from "./type";
 
 export interface ValidationResult {
   valid: boolean;
   errors: string[];
 }
 
-export const validateSignup=(body: Partial<ISignupBody>): ValidationResult =>{
+export const validateSignup = (
+  body: Partial<ISignupBody>,
+): ValidationResult => {
   const errors: string[] = [];
   if (!body.name?.trim()) errors.push("name is required");
   if (!body.email?.trim()) errors.push("email is required");
@@ -18,11 +20,29 @@ export const validateSignup=(body: Partial<ISignupBody>): ValidationResult =>{
     errors.push("email format is invalid");
   }
   return { valid: errors.length === 0, errors };
-}
+};
 
-export const validateLogin=(body: Partial<ILoginBody>): ValidationResult =>{
+export const validateLogin = (body: Partial<ILoginBody>): ValidationResult => {
   const errors: string[] = [];
   if (!body.email?.trim()) errors.push("email is required");
   if (!body.password?.trim()) errors.push("password is required");
+  return { valid: errors.length === 0, errors };
+};
+
+export const validateCreateIssue=(
+  body: Partial<ICreateIssueBody>,
+): ValidationResult=> {
+  const errors: string[] = [];
+  if (!body.title?.trim()) errors.push("title is required");
+  if (body.title && body.title.length > 150)
+    errors.push("title must be 150 characters or fewer");
+  if (!body.description?.trim()) errors.push("description is required");
+  if (body.description && body.description.trim().length < 20) {
+    errors.push("description must be at least 20 characters");
+  }
+  if (!body.type) errors.push("type is required");
+  if (body.type && !["bug", "feature_request"].includes(body.type)) {
+    errors.push("type must be bug or feature_request");
+  }
   return { valid: errors.length === 0, errors };
 }

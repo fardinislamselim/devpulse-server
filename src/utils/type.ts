@@ -38,3 +38,25 @@ export interface IJwtPayload {
   iat?: number;
   exp?: number;
 }
+
+// ── Issue 
+
+export type IIssueType = "bug" | "feature_request";
+export type IIssueStatus = "open" | "in_progress" | "resolved";
+
+export interface ICreateIssueBody {
+  title: string;
+  description: string;
+  type: IIssueType;
+}
+
+export interface IIssue {
+  id: number;
+  title: string;
+  description: string;
+  type: IIssueType;
+  status: IIssueStatus;
+  reporter_id: number;
+  created_at: Date;
+  updated_at: Date;
+}
