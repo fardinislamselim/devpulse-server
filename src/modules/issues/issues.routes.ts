@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { authenticate } from "../../middlewares/auth";
-import { createIssue, getAllIssues, getIssueById, updateIssue } from "./issues.controller";
+import { authenticate, authorise } from "../../middlewares/auth";
+import { createIssue, deleteIssue, getAllIssues, getIssueById, updateIssue } from "./issues.controller";
 
 const router = Router();
 
@@ -11,5 +11,6 @@ router.get("/:id", getIssueById);
 
 router.patch("/:id", authenticate, updateIssue);
 
-export const issuesRoutes = router;
+router.delete("/:id", authenticate, authorise("maintainer"), deleteIssue);
 
+export const issuesRoutes = router;

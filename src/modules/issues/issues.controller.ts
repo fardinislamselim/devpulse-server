@@ -3,6 +3,7 @@ import { sendError, sendSuccess } from "../../utils/sendResponse";
 import { StatusCodes } from "http-status-codes";
 import {
   createIssueService,
+  deleteIssueService,
   getAllIssuesService,
   getIssueByIdService,
   updateIssueService,
@@ -132,6 +133,34 @@ export const updateIssue = async (
 
     // Success response
     sendSuccess(res, StatusCodes.OK, "Issue updated successfully", updated);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const deleteIssue = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    // Parse ID
+    const issueId = Number(req.params.id);
+
+    if (Number.isNaN(issueId)) {
+      sendError(res, StatusCodes.BAD_REQUEST, "Invalid issue ID.");
+
+      return;
+    }
+
+    // Current user
+    const user = req.user!;
+
+    // Service call
+    await deleteIssueService(issueId, user);
+
+    // Success response
+    sendSuccess(res, StatusCodes.OK, "Issue deleted successfully");
   } catch (err) {
     next(err);
   }

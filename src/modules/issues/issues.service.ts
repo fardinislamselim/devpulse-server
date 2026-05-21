@@ -260,3 +260,40 @@ export const updateIssueService = async (
 
   return updated;
 };
+
+export const deleteIssueService = async (
+  issueId: number,
+  user: IUserPayload,
+): Promise<void> => {
+  // Find issue
+  const issue = await queryOne<IIssue>(
+    `SELECT *
+     FROM issues
+     WHERE id = $1`,
+    [issueId],
+  );
+
+  // Not found
+  if (!issue) {
+    throw {
+      statusCode: StatusCodes.NOT_FOUND,
+      message: "Issue not found.",
+    };
+  }
+
+  // Permission check
+  // Contributor can delete only own issue
+  if (user.role === "contributor" && issue.reporter_id !== user.id) {
+    throw {
+      statusCode: StatusCodes.FORBIDDEN,
+      message: "You can only delete your own issues.",
+    };
+  }
+
+  // Delete issue
+  await queryOne(
+    `DELETE FROM issues
+     WHERE id = $1`,
+    [issueId],
+  );
+};
