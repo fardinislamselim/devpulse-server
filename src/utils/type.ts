@@ -39,7 +39,7 @@ export interface IJwtPayload {
   exp?: number;
 }
 
-// ── Issue 
+// ── Issue
 
 export type IIssueType = "bug" | "feature_request";
 export type IIssueStatus = "open" | "in_progress" | "resolved";
@@ -59,4 +59,21 @@ export interface IIssue {
   reporter_id: number;
   created_at: Date;
   updated_at: Date;
+}
+
+export interface IIssueQueryParams {
+  sort?: "newest" | "oldest";
+  type?: IIssueType;
+  status?: IIssueStatus;
+}
+
+
+export interface IReporterInfo {
+  id: number;
+  name: string;
+  role: IUserRole;
+}
+
+export interface IIssueWithReporter extends Omit<IIssue, "reporter_id"> {
+  reporter: IReporterInfo;
 }

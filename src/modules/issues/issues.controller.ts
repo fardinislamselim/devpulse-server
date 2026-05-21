@@ -1,10 +1,9 @@
 import type { NextFunction, Request, Response } from "express";
-import type { ICreateIssueBody } from "../../utils/type";
-import { validateCreateIssue } from "../../utils/validation";
 import { sendError, sendSuccess } from "../../utils/sendResponse";
 import { StatusCodes } from "http-status-codes";
-import { createIssueService } from "./issues.service";
-
+import { createIssueService, getAllIssuesService } from "./issues.service";
+import type { ICreateIssueBody, IIssueQueryParams } from "../../utils/type";
+import { validateCreateIssue } from "../../utils/validation";
 
 export const createIssue = async (
   req: Request,
@@ -34,6 +33,22 @@ export const createIssue = async (
 
     // Success response
     sendSuccess(res, StatusCodes.CREATED, "Issue created successfully", issue);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getAllIssues = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const query = req.query as IIssueQueryParams;
+
+    const data = await getAllIssuesService(query);
+
+    sendSuccess(res, StatusCodes.OK, "Issues fetched successfully", data);
   } catch (err) {
     next(err);
   }

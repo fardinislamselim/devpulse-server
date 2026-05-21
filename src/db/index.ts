@@ -3,9 +3,7 @@ import { config } from "../config";
 
 export const pool = new Pool({
   connectionString: process.env.DB_CONNECTION,
-  ssl: config.node_env === "production"
-      ? { rejectUnauthorized: false }
-      : false,
+  ssl: config.node_env === "production" ? { rejectUnauthorized: false } : false,
 });
 
 export const initDb = async () => {
@@ -47,11 +45,18 @@ export const initDb = async () => {
   }
 };
 
-
-export const queryOne = async  <T extends object>(
+export const queryOne = async <T extends object>(
   sql: string,
   params: unknown[] = [],
 ): Promise<T | null> => {
   const result = await pool.query<T>(sql, params);
   return result.rows[0] ?? null;
+};
+
+export async function queryRows<T extends object>(
+  sql: string,
+  params: unknown[] = [],
+): Promise<T[]> {
+  const result = await pool.query<T>(sql, params);
+  return result.rows;
 }
